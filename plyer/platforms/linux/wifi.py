@@ -74,9 +74,7 @@ class NMCLIWifi(Wifi):
             stdout=PIPE
         ).communicate()[0].decode('utf-8')
 
-        if output.split()[0] == 'enabled':
-            return True
-        return False
+        return output.split()[0] == 'enabled'
 
     def _is_connected(self, interface=None):
         '''
@@ -147,10 +145,7 @@ class NMCLIWifi(Wifi):
         # parse output
         for line in output.splitlines():
             line = line.replace('\\:', '$$')
-            row = {
-                field: value
-                for field, value in zip(fields, line.split(':'))
-            }
+            row = dict(zip(fields, line.split(':')))
 
             row['BSSID'] = row['BSSID'].replace('$$', ':')
             self.names[row['SSID']] = row
@@ -165,9 +160,10 @@ class NMCLIWifi(Wifi):
         if not self.names:
             self._start_scanning()
 
-        ret_list = {}
-        ret_list['ssid'] = self.names[name]['SSID']
-        ret_list['signal'] = self.names[name]['SIGNAL']
+        ret_list = {
+            'ssid': self.names[name]['SSID'],
+            'signal': self.names[name]['SIGNAL'],
+        }
 
         bars = len(self.names[name]['BARS'])
         ret_list['quality'] = '{}/100'.format(bars / 5.0 * 100)
@@ -326,9 +322,7 @@ class LinuxWifi(Wifi):
             nmcli output is properly decoded to unicode
         '''
         enbl = Popen(["nmcli", "radio", "wifi"], stdout=PIPE, stderr=PIPE)
-        if enbl.communicate()[0].split()[0].decode('utf-8') == "enabled":
-            return True
-        return False
+        return enbl.communicate()[0].split()[0].decode('utf-8') == "enabled"
 
     def _is_connected(self, interface=None):
         '''
@@ -373,8 +367,8 @@ class LinuxWifi(Wifi):
 
         if self._is_enabled():
             list_ = list(wifi.Cell.all(interface))
-            for i in range(len(list_)):
-                self.names[list_[i].ssid] = list_[i]
+            for item in list_:
+                self.names[item.ssid] = item
         else:
             raise Exception('Wifi not enabled.')
 
@@ -385,21 +379,21 @@ class LinuxWifi(Wifi):
 
         .. versionadded:: 1.2.5
         '''
-        ret_list = {}
-        ret_list['ssid'] = self.names[name].ssid
-        ret_list['signal'] = self.names[name].signal
-        ret_list['quality'] = self.names[name].quality
-        ret_list['frequency'] = self.names[name].frequency
-        ret_list['bitrates'] = self.names[name].bitrates
-        ret_list['encrypted'] = self.names[name].encrypted
-        ret_list['channel'] = self.names[name].channel
-        ret_list['address'] = self.names[name].address
-        ret_list['mode'] = self.names[name].mode
-        if not ret_list['encrypted']:
-            return ret_list
-        else:
+        ret_list = {
+            'ssid': self.names[name].ssid,
+            'signal': self.names[name].signal,
+            'quality': self.names[name].quality,
+            'frequency': self.names[name].frequency,
+            'bitrates': self.names[name].bitrates,
+            'encrypted': self.names[name].encrypted,
+            'channel': self.names[name].channel,
+            'address': self.names[name].address,
+            'mode': self.names[name].mode,
+        }
+
+        if ret_list['encrypted']:
             ret_list['encryption_type'] = self.names[name].encryption_type
-            return ret_list
+        return ret_list
 
     def _get_available_wifi(self):
         '''

@@ -73,21 +73,20 @@ class Win32FileChooser:
                         args["File"] = self.path
                         args["DefExt"] = ext and ext[1:]  # no period
 
-                args["Title"] = self.title if self.title else "Pick a file..."
+                args["Title"] = self.title or "Pick a file..."
                 args["CustomFilter"] = 'Other file types\x00*.*\x00'
                 args["FilterIndex"] = 1
-                file = ""
-                if "File" in args:
-                    file = args["File"]
+                file = args.get("File", "")
                 args["File"] = file + ("\x00"*4096)
 
                 # e.g. open_file(filters=['*.txt', '*.py'])
-                filters = ""
-                for f in self.filters:
-                    if type(f) == str:
-                        filters += (f + "\x00") * 2
-                    else:
-                        filters += f[0] + "\x00" + ";".join(f[1:]) + "\x00"
+                filters = "".join(
+                    (f + "\x00") * 2
+                    if type(f) == str
+                    else f[0] + "\x00" + ";".join(f[1:]) + "\x00"
+                    for f in self.filters
+                )
+
                 args["Filter"] = filters
 
                 flags = win32con.OFN_OVERWRITEPROMPT
@@ -133,9 +132,12 @@ class Win32FileChooser:
                 pidl, name, images = browse(
                     win32gui.GetDesktopWindow(),
                     None,
-                    self.title if self.title else "Pick a folder...",
-                    BIF_NEWDIALOGSTYLE | BIF_EDITBOX, None, None
+                    self.title or "Pick a folder...",
+                    BIF_NEWDIALOGSTYLE | BIF_EDITBOX,
+                    None,
+                    None,
                 )
+
 
                 # pidl is None when nothing is selected
                 # and e.g. the dialog is closed afterwards with Cancel

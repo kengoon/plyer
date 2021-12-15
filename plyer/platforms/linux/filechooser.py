@@ -62,13 +62,12 @@ class SubprocessFileChooser:
         while True:
             ret = self._process.poll()
             if ret is not None:
-                if ret == self.successretcode:
-                    out = self._process.communicate()[0].strip().decode('utf8')
-                    self.selection = self._split_output(out)
-                    self._handle_selection(self.selection)
-                    return self.selection
-                else:
+                if ret != self.successretcode:
                     return None
+                out = self._process.communicate()[0].strip().decode('utf8')
+                self.selection = self._split_output(out)
+                self._handle_selection(self.selection)
+                return self.selection
             time.sleep(0.1)
 
     def _split_output(self, out):
@@ -146,28 +145,23 @@ class KDialogFileChooser(SubprocessFileChooser):
         filt = []
 
         for f in self.filters:
-            if type(f) == str:
-                filt += [f]
-            else:
-                filt += list(f[1:])
-
+            filt += [f] if type(f) == str else list(f[1:])
         if self.mode == "dir":
-            cmdline += [
-                "--getexistingdirectory",
-                (self.path if self.path else os.path.expanduser("~"))
-            ]
+            cmdline += ["--getexistingdirectory", self.path or os.path.expanduser("~")]
         elif self.mode == "save":
             cmdline += [
                 "--getsavefilename",
-                (self.path if self.path else os.path.expanduser("~")),
-                " ".join(filt)
+                self.path or os.path.expanduser("~"),
+                " ".join(filt),
             ]
+
         else:
             cmdline += [
                 "--getopenfilename",
-                (self.path if self.path else os.path.expanduser("~")),
-                " ".join(filt)
+                self.path or os.path.expanduser("~"),
+                " ".join(filt),
             ]
+
         if self.multiple:
             cmdline += ["--multiple", "--separate-output"]
         if self.title:

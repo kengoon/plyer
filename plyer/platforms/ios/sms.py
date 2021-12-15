@@ -31,10 +31,6 @@ class IOSSms(Sms):
         if recipient:
             # Apple has not supported multiple recipients yet.
             url += str(recipient)
-        if message:
-            # Apple has to supported it yet.
-            pass
-
         nsurl = NSURL.alloc().initWithString_(objc_str(url))
         UIApplication.sharedApplication().openURL_(nsurl)
 

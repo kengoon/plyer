@@ -104,11 +104,7 @@ class AndroidNotification(Notification):
         if icon is not None:
             bitmap_icon = BitmapFactory.decodeFile(icon)
             notification.setLargeIcon(bitmap_icon)
-        elif icon == '':
-            # we don't want the big icon set,
-            # only the small one in the top panel
-            pass
-        else:
+        elif icon != '':
             bitmap_icon = BitmapFactory.decodeResource(
                 python_act.getResources(), app_icon
             )
@@ -119,11 +115,9 @@ class AndroidNotification(Notification):
         .. versionadded:: 1.4.0
         '''
         if SDK_INT < 26:
-            noti = NotificationBuilder(activity)
-        else:
-            self._channel = self._build_notification_channel(title)
-            noti = NotificationBuilder(activity, self._channel_id)
-        return noti
+            return NotificationBuilder(activity)
+        self._channel = self._build_notification_channel(title)
+        return NotificationBuilder(activity, self._channel_id)
 
     @staticmethod
     def _set_open_behavior(notification):
