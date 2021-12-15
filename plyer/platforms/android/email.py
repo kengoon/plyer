@@ -3,6 +3,8 @@ Module of Android API for plyer.email.
 '''
 
 from jnius import autoclass, cast
+from sphinx.addnodes import acks
+
 from plyer.facades import Email
 from plyer.platforms.android import activity
 
@@ -49,6 +51,7 @@ class AndroidEmail(Email):
             )
         else:
             intent.setClassName('com.google.android.gm', 'com.google.android.gm.ComposeActivityGmailExternal')
+            activity.startActivity(intent)
 
 
 
